@@ -28,6 +28,8 @@ import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
+import { TeamsHub } from "../../services/teams/TeamsHub"
+import { TeamsManager } from "../../services/teams/TeamsManager"
 import { fileExistsAtPath } from "../../utils/fs"
 import { playSound, setSoundEnabled, setSoundVolume } from "../../utils/sound"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
@@ -67,6 +69,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	private clineStack: Cline[] = []
 	private workspaceTracker?: WorkspaceTracker
 	protected mcpHub?: McpHub // Change from private to protected
+	protected teamsHub?: TeamsHub // Teams integration hub
 	private latestAnnouncementId = "feb-27-2025-automatic-checkpoints" // update to some unique identifier when we add a new announcement
 	private contextProxy: ContextProxy
 	configManager: ConfigManager
@@ -93,6 +96,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			})
 			.catch((error) => {
 				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
+			})
+			
+		// Initialize Teams Hub through the singleton manager
+		TeamsManager.getInstance(this.context, this)
+			.then((hub) => {
+				this.teamsHub = hub
+			})
+			.catch((error) => {
+				this.outputChannel.appendLine(`Failed to initialize Teams Hub: ${error}`)
 			})
 	}
 
@@ -259,12 +271,15 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		this.workspaceTracker = undefined
 		this.mcpHub?.dispose()
 		this.mcpHub = undefined
+		this.teamsHub?.dispose()
+		this.teamsHub = undefined
 		this.customModesManager?.dispose()
 		this.outputChannel.appendLine("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 
-		// Unregister from McpServerManager
+		// Unregister from managers
 		McpServerManager.unregisterProvider(this)
+		TeamsManager.unregisterProvider(this)
 	}
 
 	public static getVisibleInstance(): ClineProvider | undefined {
@@ -2457,8 +2472,12 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 		return this.getCurrentCline()?.clineMessages || []
 	}
 
-	// Add public getter
+	// Add public getters
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
+	}
+	
+	public getTeamsHub(): TeamsHub | undefined {
+		return this.teamsHub
 	}
 }

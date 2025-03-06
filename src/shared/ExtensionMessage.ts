@@ -136,6 +136,8 @@ export interface ExtensionState {
 	toolRequirements?: Record<string, boolean> // Map of tool names to their requirements (e.g. {"apply_diff": true} if diffEnabled)
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
 	cwd?: string // Current working directory
+	teamsEnabled?: boolean // Whether Teams integration is enabled
+	teamsWebhookUrl?: string // Teams webhook URL to send messages to
 }
 
 export interface ClineMessage {
@@ -189,6 +191,8 @@ export type ClineSay =
 	| "new_task"
 	| "checkpoint_saved"
 	| "rooignore_error"
+	| "teams_message_sent"
+	| "teams_error"
 
 export interface ClineSayTool {
 	tool:
