@@ -97,7 +97,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			.catch((error) => {
 				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
 			})
-			
+
 		// Initialize Teams Hub through the singleton manager
 		TeamsManager.getInstance(this.context, this)
 			.then((hub) => {
@@ -2398,6 +2398,8 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			maxOpenTabsContext: stateValues.maxOpenTabsContext ?? 20,
 			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
+			teamsEnabled: stateValues.teamsEnabled ?? false,
+			teamsWebhookUrl: stateValues.teamsWebhookUrl,
 		}
 	}
 
@@ -2476,7 +2478,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
 	}
-	
+
 	public getTeamsHub(): TeamsHub | undefined {
 		return this.teamsHub
 	}

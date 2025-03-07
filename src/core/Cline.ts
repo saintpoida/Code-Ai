@@ -545,7 +545,7 @@ export class Cline {
 					await this.providerRef
 						.deref()
 						?.postMessageToWebview({ type: "partialMessage", partialMessage: lastMessage }) // more performant than an entire postStateToWebview
-					
+
 					// Send complete message to Teams if it's not a partial message
 					if (!partial) {
 						const teamsHub = this.providerRef.deref()?.getTeamsHub()
@@ -557,10 +557,10 @@ export class Cline {
 					// this is a new partial=false message, so add it like normal
 					const sayTs = Date.now()
 					this.lastMessageTs = sayTs
-					const message = { ts: sayTs, type: "say", say: type, text, images }
+					const message = { ts: sayTs, type: "say", say: type, text, images } as ClineMessage
 					await this.addToClineMessages(message)
 					await this.providerRef.deref()?.postStateToWebview()
-					
+
 					// Send message to Teams
 					const teamsHub = this.providerRef.deref()?.getTeamsHub()
 					if (teamsHub) {
@@ -572,10 +572,10 @@ export class Cline {
 			// this is a new non-partial message, so add it like normal
 			const sayTs = Date.now()
 			this.lastMessageTs = sayTs
-			const message = { ts: sayTs, type: "say", say: type, text, images, checkpoint }
+			const message = { ts: sayTs, type: "say", say: type, text, images, checkpoint } as ClineMessage
 			await this.addToClineMessages(message)
 			await this.providerRef.deref()?.postStateToWebview()
-			
+
 			// Send message to Teams
 			const teamsHub = this.providerRef.deref()?.getTeamsHub()
 			if (teamsHub) {
