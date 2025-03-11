@@ -99,6 +99,7 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 			})
 
 		// Initialize Teams Hub through the singleton manager
+		this.outputChannel.appendLine("initializing Teams Hub")
 		TeamsManager.getInstance(this.context, this)
 			.then((hub) => {
 				this.teamsHub = hub

@@ -7,118 +7,117 @@ import { ClineMessage, ClineSay } from "../../shared/ExtensionMessage"
  * TeamsHub is responsible for sending messages to Microsoft Teams
  */
 export class TeamsHub {
-    private context: vscode.ExtensionContext
-    private provider: ClineProvider
-    private outputChannel: vscode.OutputChannel
-    private webhookUrl: string | undefined
-    private teamsEnabled: boolean = false
+	private context: vscode.ExtensionContext
+	private provider: ClineProvider
+	private outputChannel: vscode.OutputChannel
+	private webhookUrl: string | undefined
+	private teamsEnabled: boolean = false
 
-    constructor(context: vscode.ExtensionContext, provider: ClineProvider, outputChannel: vscode.OutputChannel) {
-        this.context = context
-        this.provider = provider
-        this.outputChannel = outputChannel
-    }
+	constructor(context: vscode.ExtensionContext, provider: ClineProvider, outputChannel: vscode.OutputChannel) {
+		this.context = context
+		this.provider = provider
+		this.outputChannel = outputChannel
+	}
 
-    /**
-     * Initialize the Teams hub with the webhook URL
-     * @param webhookUrl The Teams webhook URL
-     */
-    public initialize(webhookUrl: string): void {
-        this.webhookUrl = webhookUrl
-        this.teamsEnabled = true
-        this.log(`Teams hub initialized with webhook URL: ${webhookUrl}`)
-    }
+	/**
+	 * Initialize the Teams hub with the webhook URL
+	 * @param webhookUrl The Teams webhook URL
+	 */
+	public initialize(webhookUrl: string): void {
+		this.webhookUrl = webhookUrl
+		this.teamsEnabled = true
+		this.log(`Teams hub initialized with webhook URL: ${webhookUrl}`)
+	}
 
-    /**
-     * Send a message to Microsoft Teams
-     * @param message The message to send
-     * @returns A promise that resolves when the message is sent
-     */
-    public async sendMessage(message: string): Promise<void> {
-        if (!this.webhookUrl || !this.teamsEnabled) {
-            this.log("Cannot send message to Teams: webhook URL not configured or Teams integration disabled")
-            throw new Error("Teams webhook URL not configured or Teams integration disabled")
-        }
+	/**
+	 * Send a message to Microsoft Teams
+	 * @param message The message to send
+	 * @returns A promise that resolves when the message is sent
+	 */
+	public async sendMessage(message: string): Promise<void> {
+		this.teamsEnabled = true
+		this.webhookUrl = "http://192.168.1.46:3978/api/notification"
 
-        try {
-            // Teams webhook API expects a JSON payload with a text property
-            await axios.post(this.webhookUrl, {
-                text: message
-            })
-            
-            this.log(`Message sent to Teams: ${message}`)
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error)
-            this.log(`Error sending message to Teams: ${errorMessage}`)
-            throw error
-        }
-    }
+		this.log("Sending message to teams")
 
-    /**
-     * Send a Cline message to Microsoft Teams
-     * @param message The Cline message to send
-     * @returns A promise that resolves when the message is sent
-     */
-    public async sendClineMessage(message: ClineMessage): Promise<void> {
-        if (!this.webhookUrl || !this.teamsEnabled) {
-            return; // Silently return if Teams integration is disabled
-        }
+		if (!this.webhookUrl || !this.teamsEnabled) {
+			this.log("Cannot send message to Teams: webhook URL not configured or Teams integration disabled")
+			throw new Error("Teams webhook URL not configured or Teams integration disabled")
+		}
 
-        // Only send certain message types to Teams
-        if (message.type !== "say") {
-            return;
-        }
+		try {
+			// Teams webhook API expects a JSON payload with a text property
+			await axios.post(this.webhookUrl, {
+				message: message,
+			})
 
-        // Filter which message types to send to Teams
-        const messagesToSend: ClineSay[] = [
-            "text", 
-            "completion_result", 
-            "error", 
-            "command_output"
-        ];
+			this.log(`Message sent to Teams: ${message}`)
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			this.log(`Error sending message to Teams: ${errorMessage}`)
+			throw error
+		}
+	}
 
-        if (!messagesToSend.includes(message.say as ClineSay)) {
-            return;
-        }
+	/**
+	 * Send a Cline message to Microsoft Teams
+	 * @param message The Cline message to send
+	 * @returns A promise that resolves when the message is sent
+	 */
+	public async sendClineMessage(message: ClineMessage): Promise<void> {
+		if (!this.webhookUrl || !this.teamsEnabled) {
+			return // Silently return if Teams integration is disabled
+		}
 
-        try {
-            // Format the message for Teams
-            let teamsMessage = "";
-            
-            // Add timestamp
-            const date = new Date(message.ts);
-            teamsMessage += `**[${date.toLocaleTimeString()}]** `;
-            
-            // Add message type
-            teamsMessage += `**${message.say}**: `;
-            
-            // Add message content
-            if (message.text) {
-                teamsMessage += message.text;
-            }
-            
-            // Send the message to Teams
-            await this.sendMessage(teamsMessage);
-            
-        } catch (error) {
-            // Log the error but don't throw - we don't want to interrupt the normal flow
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.log(`Error sending Cline message to Teams: ${errorMessage}`);
-        }
-    }
+		// Only send certain message types to Teams
+		if (message.type !== "say") {
+			return
+		}
 
-    /**
-     * Dispose of the Teams hub
-     */
-    public dispose(): void {
-        this.log("Teams hub disposed")
-    }
+		// Filter which message types to send to Teams
+		const messagesToSend: ClineSay[] = ["text", "completion_result", "error", "command_output"]
 
-    /**
-     * Log a message to the output channel
-     * @param message The message to log
-     */
-    private log(message: string): void {
-        this.outputChannel.appendLine(`[TeamsHub] ${message}`)
-    }
+		if (!messagesToSend.includes(message.say as ClineSay)) {
+			return
+		}
+
+		try {
+			// Format the message for Teams
+			let teamsMessage = ""
+
+			// Add timestamp
+			const date = new Date(message.ts)
+			teamsMessage += `**[${date.toLocaleTimeString()}]** `
+
+			// Add message type
+			teamsMessage += `**${message.say}**: `
+
+			// Add message content
+			if (message.text) {
+				teamsMessage += message.text
+			}
+
+			// Send the message to Teams
+			await this.sendMessage(teamsMessage)
+		} catch (error) {
+			// Log the error but don't throw - we don't want to interrupt the normal flow
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			this.log(`Error sending Cline message to Teams: ${errorMessage}`)
+		}
+	}
+
+	/**
+	 * Dispose of the Teams hub
+	 */
+	public dispose(): void {
+		this.log("Teams hub disposed")
+	}
+
+	/**
+	 * Log a message to the output channel
+	 * @param message The message to log
+	 */
+	private log(message: string): void {
+		this.outputChannel.appendLine(`[TeamsHub] ${message}`)
+	}
 }
