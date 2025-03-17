@@ -60,6 +60,30 @@ export class TeamsHub {
 	}
 
 	/**
+	 * Receive a message from Microsoft Teams and forward it to Cline
+	 * @param message The message received from Teams
+	 * @returns A promise that resolves when the message is processed
+	 */
+	public async receiveMessage(message: string): Promise<void> {
+		this.log(`Received message from Teams: ${message}`)
+
+		if (!this.webhookUrl || !this.teamsEnabled) {
+			this.log("Cannot process message from Teams: Teams integration disabled")
+			return
+		}
+
+		try {
+			// Forward the message to Cline
+			await this.provider.handleTeamsMessage(message)
+			this.log(`Message from Teams processed: ${message}`)
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			this.log(`Error processing message from Teams: ${errorMessage}`)
+			throw error
+		}
+	}
+
+	/**
 	 * Send a Cline message to Microsoft Teams
 	 * @param message The Cline message to send
 	 * @returns A promise that resolves when the message is sent

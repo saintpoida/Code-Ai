@@ -2476,6 +2476,35 @@ export class ClineProvider implements vscode.WebviewViewProvider {
 	}
 
 	// Add public getters
+	/**
+	 * Handle a message received from Teams
+	 * @param message The message received from Teams
+	 * @returns A promise that resolves when the message is processed
+	 */
+	public async handleTeamsMessage(message: string): Promise<void> {
+		this.log(`Handling Teams message: ${message}`)
+
+		// Format the message to indicate it came from Teams
+		const formattedMessage = `[Teams Message] ${message}`
+
+		// If there's no active Cline instance, create a new one with this message
+		if (!this.getCurrentCline() || !this.getCurrentCline()!.isInitialized) {
+			await this.initClineWithTask(formattedMessage)
+		} else {
+			// If there's an active Cline instance, add the message as a new user message
+			// We'll use the webview message system to send the message, which will trigger
+			// the normal flow for handling user messages
+			await this.postMessageToWebview({
+				type: "invoke",
+				invoke: "sendMessage",
+				text: formattedMessage,
+			})
+		}
+
+		// Focus the Cline view to show the response
+		await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+	}
+
 	public getMcpHub(): McpHub | undefined {
 		return this.mcpHub
 	}

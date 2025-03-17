@@ -26,6 +26,15 @@ export const handleUri = async (uri: vscode.Uri) => {
 			}
 			break
 		}
+		case "/teams": {
+			const message = query.get("message")
+			if (message) {
+				// Decode the message (it will be URL-encoded)
+				const decodedMessage = decodeURIComponent(message)
+				await vscode.commands.executeCommand("roo-cline.receiveTeamsMessage", decodedMessage)
+			}
+			break
+		}
 		default:
 			break
 	}

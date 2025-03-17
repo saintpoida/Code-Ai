@@ -85,6 +85,19 @@ export function activate(context: vscode.ExtensionContext) {
 		),
 	)
 
+	// Register Teams message handler command
+	context.subscriptions.push(
+		vscode.commands.registerCommand("roo-cline.receiveTeamsMessage", async (message: string) => {
+			const provider = await ClineProvider.getInstance()
+			if (provider) {
+				const teamsHub = provider.getTeamsHub()
+				if (teamsHub) {
+					await teamsHub.receiveMessage(message)
+				}
+			}
+		}),
+	)
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand("roo-cline.unregisterHumanRelayCallback", (requestId: string) => {
 			humanRelayCallbacks.delete(requestId)
